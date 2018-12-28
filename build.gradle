@@ -4,30 +4,30 @@ plugins {
     id 'pmd'
     id 'idea'
     id 'org.kordamp.gradle.jdeps' version '0.5.0'
+    id "com.jfrog.bintray" version "1.5"
 }
 
 repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
 }
 
 dependencies {
-
-    // Use the awesome Spock testing and specification framework even with Java
     testImplementation("junit:junit:4.12")
 }
 
+// JAVA VERSION
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+// PMD
 pmd {
     ignoreFailures = true
     rulePriority = 4
 }
 
+// FOR JAVA MODULE SYSTEM (JPMS)
 ext.moduleName = 'com.github.joostvdg.dui.logging'
 
 compileJava {
@@ -53,5 +53,19 @@ compileTestJava {
     }
 }
 
+group = 'com.github.joostvdg.dui.logging'
+version = '1.0.0'
 
-
+// BINTRAY PUBLISH
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        // https://dl.bintray.com/joostvdg/maven-demo-lib
+        repo = 'maven-demo-lib'
+        name = 'dui-lib-logging'
+        userOrg = 'joostvdg'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/joostvdg/dui-lib-logging.git'
+    }
+}
