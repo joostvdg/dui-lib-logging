@@ -4,7 +4,9 @@ plugins {
     id 'pmd'
     id 'idea'
     id 'org.kordamp.gradle.jdeps' version '0.5.0'
-    id "com.jfrog.bintray" version "1.5"
+    id 'com.jfrog.bintray' version '1.8.4'
+    id 'maven'
+    id 'maven-publish'
 }
 
 repositories {
@@ -12,6 +14,8 @@ repositories {
 }
 
 dependencies {
+    // As of December 29th, 2018, GSON is not yet modular.
+    // implementation 'com.google.code.gson:gson:2.8.5'
     testImplementation("junit:junit:4.12")
 }
 
@@ -53,13 +57,51 @@ compileTestJava {
     }
 }
 
-group = 'com.github.joostvdg.dui.logging'
-version = '1.0.0'
-
 // BINTRAY PUBLISH
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+javadoc.failOnError = false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+
+            groupId 'com.github.joostvdg.dui'
+            artifactId 'dui-lib-logging'
+            version '1.0.2'
+        }
+    }
+}
+
+group =  'com.github.joostvdg.dui'
+version = '1.0.2'
+
+// publications = ['mavenPublication']
+
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
+    publish = true
+    publications = ['MyPublication']
     pkg {
         // https://dl.bintray.com/joostvdg/maven-demo-lib
         repo = 'maven-demo-lib'
@@ -67,5 +109,10 @@ bintray {
         userOrg = 'joostvdg'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/joostvdg/dui-lib-logging.git'
+        version {
+            name = '1.0.2'
+            desc = 'Build 1.0.2'
+            released  = new Date()
+        }
     }
 }
