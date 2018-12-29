@@ -16,7 +16,8 @@ repositories {
 dependencies {
     // As of December 29th, 2018, GSON is not yet modular.
     // implementation 'com.google.code.gson:gson:2.8.5'
-    testImplementation("junit:junit:4.12")
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.23.4'
 }
 
 // JAVA VERSION
@@ -87,13 +88,13 @@ publishing {
 
             groupId 'com.github.joostvdg.dui'
             artifactId 'dui-lib-logging'
-            version '1.0.2'
+            version '1.1.0'
         }
     }
 }
 
 group =  'com.github.joostvdg.dui'
-version = '1.0.2'
+version = '1.1.0'
 
 // publications = ['mavenPublication']
 
@@ -110,8 +111,8 @@ bintray {
         licenses = ['MIT']
         vcsUrl = 'https://github.com/joostvdg/dui-lib-logging.git'
         version {
-            name = '1.0.2'
-            desc = 'Build 1.0.2'
+            name = '1.1.0'
+            desc = 'Build 1.1.0 - added json logger'
             released  = new Date()
         }
     }

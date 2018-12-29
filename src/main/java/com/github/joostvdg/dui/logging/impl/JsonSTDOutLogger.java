@@ -5,6 +5,9 @@ import com.github.joostvdg.dui.logging.LogLevel;
 import com.github.joostvdg.dui.logging.Logger;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
 
 /**
  * Implements Logger, with a JSON format on STD Out.
@@ -13,27 +16,23 @@ import java.io.Serializable;
 @KubernetesCompatible
 public class JsonSTDOutLogger implements Logger, Serializable {
 
-    /* FORMAT:
-     * { "time": "", "message" : "", "severity" : "" }
-     * Where the time format is 'time.RFC3339Nano': "2006-01-02T15:04:05.999999999Z07:00"
-     * https://stackoverflow.com/questions/6038136/how-do-i-parse-rfc-3339-datetimes-with-java/41569330
-     */
-
     private static final long serialVersionUID = 1L;
-
-    private transient final LoggerThread loggerThread;
+    private transient final SimpleLoggerThread loggerThread;
     private transient LogLevel level;
     private transient boolean shutDown = false;
-    private transient int queued;
+
+    public JsonSTDOutLogger(SimpleLoggerThread loggerThread){
+        this.loggerThread = loggerThread;
+    }
 
     public JsonSTDOutLogger(){
-        this.loggerThread = new LoggerThread(this);
+        this.loggerThread = new SimpleLoggerThread(this);
     }
 
     @Override
     public void start(LogLevel level) {
         this.level = level;
-        this.loggerThread.start();
+        loggerThread.start();
     }
 
     @Override
@@ -46,11 +45,45 @@ public class JsonSTDOutLogger implements Logger, Serializable {
 
     @Override
     public void log(LogLevel level, String mainComponent, String subComponent, long threadId, String... messageParts) {
-
+        var component = mainComponent + " - " + subComponent;
+        var message = formatMessage(component, threadId, messageParts);
+        log(LocalDateTime.now(), message, level);
     }
 
     @Override
     public void log(LogLevel level, String component, long threadId, String... messageParts) {
+        var message = formatMessage(component, threadId, messageParts);
+        log(LocalDateTime.now(), message, level);
+    }
 
+    private String formatMessage(String component, long threadId, String[] messageParts) {
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("[");
+        messageBuilder.append(component);
+        messageBuilder.append("][");
+        messageBuilder.append(threadId);
+        messageBuilder.append("][");
+        Arrays.stream(messageParts).forEach(messageBuilder::append);
+        messageBuilder.append("]");
+        return messageBuilder.toString();
+    }
+
+    private void log(LocalDateTime now, String message, LogLevel level) {
+        synchronized (this) {
+            if (shutDown) {
+                throw new IllegalStateException("We are shutdown, stop trying to log");
+            }
+            loggerThread.queue();
+        }
+        if (level.getLevel() < this.level.getLevel()) {
+            // we should not log this
+            return;
+        }
+        LogMessage logMessage = new LogMessage.LogMessageBuilder().dateTime(now).message(message).severity(level).build();
+        try {
+            loggerThread.log(logMessage.toJSON());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

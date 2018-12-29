@@ -12,12 +12,12 @@ public class ColoredSTDOutLogger implements Logger, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private transient final LoggerThread loggerThread;
+    private transient final SimpleLoggerThread loggerThread;
     private transient LogLevel level;
     private transient boolean shutDown = false;
 
     public ColoredSTDOutLogger() {
-        this.loggerThread = new LoggerThread(this);
+        this.loggerThread = new SimpleLoggerThread(this);
     }
 
     @Override
