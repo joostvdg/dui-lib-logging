@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'default-gradle'
+        label 'gradle'
     }
     stages {
         stage('Test') {
